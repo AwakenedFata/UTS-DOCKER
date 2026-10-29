@@ -1,0 +1,49 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: hoklampung-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: [ "CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    image: zenfat/hoklampung-app:latest
+    build: .
+    container_name: hoklampung-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/hoklampung
+      ORIGIN: http://localhost:3000
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  admin:
+    image: zenfat/hoklampung-admin:latest
+    container_name: hoklampung-admin
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    env_file:
+      - .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/hoklampung
+      NEXTAUTH_URL: http://localhost:3001
+      PORT: "3000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  mongo_data:
