@@ -8,9 +8,10 @@ export const config = {
 let _browser = null;
 
 async function getBrowser() {
-  if (_browser) {
+  if (_browser && _browser.isConnected()) {
     return _browser;
   }
+  _browser = null;
 
   // Deteksi environment: gunakan Chromium package hanya jika benar-benar di Linux
   const isLinux = process.platform === "linux";
@@ -35,8 +36,6 @@ async function getBrowser() {
       "--no-sandbox",
       "--disable-setuid-sandbox",
       "--disable-dev-shm-usage",
-      "--single-process",
-      "--no-zygote",
     ];
 
     if (!executablePath) {
@@ -81,7 +80,7 @@ async function getBrowser() {
         deviceScaleFactor: 2,
       },
       executablePath,
-      headless: "new",
+      headless: true,
       ignoreHTTPSErrors: true,
     });
 
